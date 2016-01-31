@@ -78,7 +78,7 @@ void challenge4(void)
 	}
 
 	printf("Decoded line: %s\n", decodedline);
-	printf("Score: %f", highscore);
+	printf("Score: %f\n", highscore);
 
 	fclose(fp);
 	free(deciphered);

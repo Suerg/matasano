@@ -409,27 +409,27 @@ double scorechars(char *chars)
 	pch = copied = NULL;
 	copied = malloc(strlen(chars) * sizeof(copied[0]) + 1);
 
-	strncpy(copied, chars, strlen(chars) + 1);
+	strcpy(copied, chars);
 	tokens = malloc(strlen(chars) * sizeof(tokens[0]) + 1);
 	assert(copied != NULL);
 	assert(tokens != NULL);
 
 	for (i = 0; i < (int) strlen(chars); i++) {
 		tokens[i] = NULL;
-		tokens[i] = malloc(strlen(chars) * sizeof(tokens[i][0]));
+		tokens[i] = malloc(strlen(chars) * sizeof(tokens[i][0]) + 1);
 		assert(tokens[i] != NULL);
 	}
 
 	pch = strtok(copied, SEPARATORS);
 	for(i = 0; pch != NULL; i++) {
-		strncpy(tokens[i], pch, strlen(pch) + 1);
+		strcpy(tokens[i], pch);
 		pch = strtok(NULL, SEPARATORS);
 	}
 
 	score += score_letterfreq(chars);
 	score += scorewords(tokens, i);
 
-	for (i = 0; i < (int)strlen(chars) - 2; i++) {
+	for (i = 0; i < (int)strlen(chars); i++) {
 		free(tokens[i]);
 	}
 	free(tokens);
