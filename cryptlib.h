@@ -1,7 +1,9 @@
 #ifndef CRYPTLIB_H
 #define CRYPTLIB_H
 
-#define CIPHERS (127)
+#define START_CIPHER 0
+#define END_CIPHER 127
+#define CIPHERS ((END_CIPHER) - (START_CIPHER))
 #define SEPARATORS (" ,.-:;")
 
 void xortwo(char *xored, char *buf1, char *buf2, int num);

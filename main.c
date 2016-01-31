@@ -12,6 +12,8 @@
 
 void xorAZ(char **xored, char *bytes, int numbytes);
 int readstr(char **str);
+int remove_newline(char *str);
+char* find_newline(char *str);
 void challenge3(void);
 void challenge4(void);
 
@@ -58,7 +60,7 @@ void challenge4(void)
 	line = malloc(line_len * sizeof(line[0]));
 	decodedline = malloc(line_len * sizeof(decodedline[0]));
 	deciphered = malloc(line_len * sizeof(deciphered[0]));
-	deciphered[line_len -1] = '\0';
+	deciphered[line_len - 1] = '\0';
 
 	fp = fopen("res/4.txt", "r+");
 
@@ -66,6 +68,7 @@ void challenge4(void)
 		return;
 
 	while (fgets(line, line_len, fp) != NULL) {
+		remove_newline(line);
 		/*printf("Line %d: ", ++i);*/
 		score = decipherxor(deciphered, line);
 		/*printf("%s", deciphered);*/
@@ -73,7 +76,7 @@ void challenge4(void)
 
 		if (score > highscore) {
 			highscore = score;
-			strncpy(decodedline, deciphered, 500);
+			strcpy(decodedline, deciphered);
 		}
 	}
 
@@ -93,14 +96,32 @@ int readstr(char **str)
 	*str = malloc(BUF_SZ * sizeof(*str[0]));
 	strcpy(*str, "");
 	while (fgets(buffer, BUF_SZ, stdin) != NULL) {
-		char *newline = NULL;
 		size += 4;
 		*str = realloc(*str, size * sizeof(*str[0]));
 		strcat(*str, buffer);
-		if ((newline = strchr(*str, '\n')) != NULL) {
-			*newline = '\0';
+		if (remove_newline(*str))
 			break;
-		}
 	}
 	return (int) strlen(*str);
+}
+
+char* find_newline(char *str)
+{
+	return strchr(str, '\n');
+}
+
+/*
+ * Replaces a newline char in str with \0.
+ * Returns int indicating if removal occurred.
+ */
+int remove_newline(char *str)
+{
+	char *newline = NULL;
+	newline = find_newline(str);
+	if (newline != NULL) {
+		*newline = '\0';
+		return 1;
+	} else {
+		return 0;
+	}
 }

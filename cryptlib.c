@@ -1,8 +1,9 @@
 /*
  * Author: David Piper
- * Converts hex to base64
+ * cryptlib for matasano cryptopals.com challenges
  */
 
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <assert.h>
@@ -16,63 +17,6 @@
 #include "cryptlib.h"
 
 #define BUF_SZ 4
-
-/*
- *int main(void)
- *{
- *        unsigned int *base64_digits = NULL, size = BUF_SZ;
- *        char buffer[BUF_SZ];
- *        char *hex = NULL;
- *        void *temp = NULL;
- *        unsigned int *hex_bytes = NULL;
- *        char *base64_string = NULL;
- *        int i, base64_len, hex_len;
- *        printf("Enter a hex number: ");
- *
- *        hex = malloc(4 * sizeof(char));
- *        if (!hex)
- *                exit(0);
- *        hex[0] = '\0';
- *
- *        while(fgets(buffer, BUF_SZ, stdin) != NULL) {
- *                char *newline = NULL;
- *                size += 4;
- *                temp = realloc(hex, size * sizeof(hex[0]));
- *                if (!temp)
- *                        break;
- *                hex = temp;
- *                strcat(hex, buffer);
- *                if ((newline = strchr(hex, '\n')) != NULL) {
- *                        *newline = '\0';
- *                        break;
- *                }
- *        }
- *
- *        printf("%s\n", hex);
- *
- *        temp = malloc(size * sizeof(int));
- *        hex_bytes = temp ? temp : hex_bytes;
- *        hex_len = str_to_hex(hex_bytes, hex);
- *        base64_digits = malloc(size * sizeof(int));
- *
- *        for (i = 0; i < hex_len; i++)
- *                printf("%ud ", hex_bytes[i]);
- *
- *        printf("\n");
- *
- *        base64_len = hex_to_base64(base64_digits, hex_bytes, hex_len);
- *        base64_string = malloc(base64_len * sizeof(char) + 1);
- *        base64_to_string(base64_string, base64_digits, base64_len);
- *
- *        printf("In Base64: %s\n", base64_string);
- *
- *        free(base64_string);
- *        free(base64_digits);
- *        free(hex_bytes);
- *        free(hex);
- *        return 0;
- *}
- */
 
 void xortwo(char *xored, char *buf1, char *buf2, int num)
 {
@@ -125,41 +69,6 @@ int strtohex_bytes(char *bytes, char *str)
 	free(nibbles);
 	return num;
 }
-/*
- *int strtohex_bytes(unsigned int *bytes, const char *string)
- *{
- *        int len = (int) strlen(string);
- *        int i, b = 0;
- *        unsigned int nibbles[4];
- *        char digit1[4];
- *        char digit2[4];
- *        digit1[1] = '\0';
- *        digit2[1] = '\0';
- *
- *        if (len == 1) {
- *                digit2[0] = string[0];
- *                nibbles[0] = 0;
- *                nibbles[1] = (unsigned int) strtol(digit2, NULL, 16);
- *                bytes[b++] = nibbles_to_byte(nibbles);
- *        }
- *
- *        for (i = 0; i < len - 1; i += 2, b++) {
- *                if (i == 0 && len % 2 != 0) {
- *                        digit2[0] = string[i];
- *                        nibbles[0] = 0;
- *                        nibbles[1] = (unsigned int) strtol(digit2, NULL, 16);
- *                } else {
- *                        digit1[0] = string[i];
- *                        digit2[0] = string[i + 1];
- *                        nibbles[0] = (unsigned int) strtol(digit1, NULL, 16);
- *                        nibbles[1] = (unsigned int) strtol(digit2, NULL, 16);
- *                }
- *                bytes[b] = nibbles_to_byte(nibbles);
- *        }
- *
- *        return b;
- *}
- */
 
 char nibblestobyte(char n1, char n2)
 {
@@ -226,11 +135,11 @@ void scorebytes(double *scores, char *bytes, int num)
 	int i;
 	char c;
 	char *xored = NULL;
-	xored = malloc(num * sizeof(xored[0]) + 1);
+	xored = malloc(num + 1 * sizeof(xored[0]));
 	assert(xored != NULL);
 	xored[num] = '\0';
 
-	for (i = 0, c = 'A'; c <= 'Z'; i++, c++) {
+	for (i = 0, c = START_CIPHER; i < CIPHERS; i++, c++) {
 		xorbytes(xored, bytes, num, c);
 		scores[i] = scorechars(xored);
 	}
@@ -388,6 +297,7 @@ double score_letterfreq(char *chars)
 
 	return score;
 }
+
 double scorewords(char **words, int num)
 {
 	double score = 0.0;
@@ -400,34 +310,37 @@ double scorewords(char **words, int num)
 
 	return score;
 }
+
 double scorechars(char *chars)
 {
-	double score = 0.0;
 	int i = 0;
+	double score = 0.0;
 	char *pch, *copied;
 	char **tokens = NULL;
 	pch = copied = NULL;
-	copied = malloc(strlen(chars) * sizeof(copied[0]) + 1);
+	copied = malloc(strlen(chars) + 1 * sizeof(copied[0]));
 
 	strcpy(copied, chars);
-	tokens = malloc(strlen(chars) * sizeof(tokens[0]) + 1);
+	tokens = malloc(strlen(chars) * sizeof(tokens[0]));
 	assert(copied != NULL);
 	assert(tokens != NULL);
 
-	for (i = 0; i < (int) strlen(chars); i++) {
+	for (i = 0; i < (int) strlen(copied); i++) {
 		tokens[i] = NULL;
-		tokens[i] = malloc(strlen(chars) * sizeof(tokens[i][0]) + 1);
+		tokens[i] = malloc(strlen(chars) + 1 * sizeof(tokens[i][0]));
 		assert(tokens[i] != NULL);
 	}
 
 	pch = strtok(copied, SEPARATORS);
 	for(i = 0; pch != NULL; i++) {
+		if (i >= (int)strlen(chars))
+			break;
 		strcpy(tokens[i], pch);
 		pch = strtok(NULL, SEPARATORS);
 	}
 
 	score += score_letterfreq(chars);
-	score += scorewords(tokens, i);
+	score += scorewords(tokens, i - 1);
 
 	for (i = 0; i < (int)strlen(chars); i++) {
 		free(tokens[i]);
@@ -471,8 +384,8 @@ double decipherxor(char *deciphered, char *hexstr)
 
 	for (i = 0; i < CIPHERS; i++) {
 		if (scores[i] > highscore) {
-			highscore = scores[i];
-			cipher = 'A' + i;
+		highscore = scores[i];
+			cipher = START_CIPHER + i;
 		}
 	}
 	i = cipher;
