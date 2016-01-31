@@ -60,7 +60,7 @@ void challenge4(void)
 	deciphered = malloc(line_len * sizeof(deciphered[0]));
 	deciphered[line_len -1] = '\0';
 
-	fp = fopen("4.txt", "r+");
+	fp = fopen("res/4.txt", "r+");
 
 	if (!fp)
 		return;
