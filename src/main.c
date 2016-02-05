@@ -9,19 +9,49 @@
 #include "cryptlib.h"
 
 #define BUF_SZ 4
+#define TERM '~'
 
 void xorAZ(char **xored, char *bytes, int numbytes);
 int readstr(char **str);
-int remove_newline(char *str);
-char* find_newline(char *str);
+int remove_term(char *str);
+char* find_term(char *str);
 void challenge3(void);
 void challenge4(void);
+void challenge5(void);
+void challenge5_5(void);
 
 int main(void)
 {
-	challenge4();
+	challenge5();
 
 	return 0;
+}
+
+void challenge5_5(void)
+{
+	char *str, *key, *deciphered;
+	int len;
+	len = 0;
+	str = key = deciphered =  NULL;
+
+	printf("Enter the string to decipher: ");
+	len = readstr(&str);
+	assert(str != NULL);
+
+	printf("Enter the repeating XOR key: ");
+	readstr(&key);
+
+	deciphered = malloc((len + 1) * sizeof(deciphered[0]));
+	assert(deciphered != NULL);
+	deciphered[len] = '\0';
+
+	decipher_repeatingxor(deciphered, str, key);
+
+	printf("Deciphered: %s\n", deciphered);
+
+	free(deciphered);
+	free(key);
+	free(str);
 }
 
 void challenge3(void)
@@ -68,11 +98,8 @@ void challenge4(void)
 		return;
 
 	while (fgets(line, line_len, fp) != NULL) {
-		remove_newline(line);
-		/*printf("Line %d: ", ++i);*/
+		remove_term(line);
 		score = decipherxor(deciphered, line);
-		/*printf("%s", deciphered);*/
-		/*printf("Score: %f", score);*/
 
 		if (score > highscore) {
 			highscore = score;
@@ -89,6 +116,49 @@ void challenge4(void)
 	free(line);
 }
 
+void challenge5(void)
+{
+	char *str, *key, *enciphered, *deciphered;
+	int i, len;
+	i = len = 0;
+	str = key = enciphered = deciphered =  NULL;
+
+	printf("Enter the string to encipher: ");
+	len = readstr(&str);
+	assert(str != NULL);
+
+	printf("Enter the repeating XOR key: ");
+	readstr(&key);
+
+	enciphered = malloc(1 + len  * sizeof(enciphered[0]));
+	deciphered = malloc(1 + len  * sizeof(deciphered[0]));
+	assert(enciphered != NULL);
+	assert(deciphered != NULL);
+	enciphered[len] = '\0';
+	deciphered[len] = '\0';
+
+	encipher_repeatingxor(enciphered, str, key);
+
+	enciphered[len] = '\0';
+
+	printf("Enciphered: ");
+	for (i = 0; i < len; i++) {
+		printf("%x", (unsigned int)enciphered[i]);
+	}
+	printf("\n");
+
+	printf("Str len: %d\n", (int)strlen(enciphered));
+
+	decipher_repeatingxor(deciphered, enciphered, key);
+
+	printf("Deciphered: %s", deciphered);
+
+	free(enciphered);
+	free(key);
+	free(str);
+}
+
+
 int readstr(char **str)
 {
 	char buffer[BUF_SZ];
@@ -99,27 +169,27 @@ int readstr(char **str)
 		size += 4;
 		*str = realloc(*str, size * sizeof(*str[0]));
 		strcat(*str, buffer);
-		if (remove_newline(*str))
+		if (remove_term(*str))
 			break;
 	}
 	return (int) strlen(*str);
 }
 
-char* find_newline(char *str)
+char* find_term(char *str)
 {
-	return strchr(str, '\n');
+	return strchr(str, TERM);
 }
 
 /*
- * Replaces a newline char in str with \0.
+ * Replaces a term char in str with \0.
  * Returns int indicating if removal occurred.
  */
-int remove_newline(char *str)
+int remove_term(char *str)
 {
-	char *newline = NULL;
-	newline = find_newline(str);
-	if (newline != NULL) {
-		*newline = '\0';
+	char *term = NULL;
+	term = find_term(str);
+	if (term != NULL) {
+		*term = '\0';
 		return 1;
 	} else {
 		return 0;

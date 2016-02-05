@@ -1,0 +1,7 @@
+enable_testing()
+include_directories(${CUNIT_INCLUDE_DIRS})
+set(LIBS ${LIBS} ${CUNIT_LIBRARIES} cryptlib)
+include_directories(. ../src)
+add_executable(test-dataconvert test-dataconvert.c)
+target_link_libraries(test-dataconvert ${LIBS} cmocka)
+add_test(test-dataconvert ${CMAKE_CURRENT_BINARY_DIR}/test-dataconvert)
