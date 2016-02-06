@@ -1,6 +1,8 @@
 #ifndef CRYPTLIB_H
 #define CRYPTLIB_H
 
+#include "../tests/unit-test.h"
+
 /*
  * Library functions
  */

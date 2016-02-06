@@ -1,5 +1,6 @@
 cmake_minimum_required(VERSION 3.2)
 add_definitions("@/home/suerg/.gcc")
+option(UNIT_TEST "UNIT_TEST" OFF)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/CMakeModules/")
 project(cryptlib)
 enable_testing()

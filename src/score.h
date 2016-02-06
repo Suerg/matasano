@@ -3,7 +3,10 @@
 
 #define SEPARATORS (" ,.-:;")
 
-void score_bytes(double *scores, unsigned char *bytes, int len);
-double calc_bytescore(unsigned char *bytes, int len);
+#include "../tests/unit-test.h"
+#include "bytes.h"
+
+void score_bytes(double *scores, struct bytes *bytes);
+double calc_bytescore(struct bytes *bytes);
 
 #endif

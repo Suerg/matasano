@@ -1,2 +1,5 @@
 include_directories(.)
-add_library(cryptlib main.c cryptlib.c dataconvert.c datamanip.c score.c)
+if (UNIT_TEST)
+	add_definitions(-DUNIT_TESTING)
+endif (UNIT_TEST)
+add_library(cryptlib dataconvert.c datamanip.c score.c bytes.c ref.c)

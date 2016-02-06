@@ -1,10 +1,12 @@
 #ifndef DATAMANIP_H
 #define DATAMANIP_H
 
-void xortwo(unsigned char *xored, unsigned char *b1,
-		unsigned char *b2, int len);
+#include "../tests/unit-test.h"
+#include "bytes.h"
+
+void xortwo(struct bytes *xored, struct bytes *b1,
+		struct bytes *b2);
 unsigned char xorbyte(unsigned char byte, unsigned char xorwith);
-void xorbytes(unsigned char *xored, unsigned char *bytes,
-		int len, unsigned char xorwith);
+void xorbytes(struct bytes *xored, struct bytes *bytes, unsigned char xorwith);
 
 #endif

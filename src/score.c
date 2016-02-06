@@ -10,88 +10,81 @@
 #include "dataconvert.h"
 #include "datamanip.h"
 
-static double calc_wordsscore(unsigned char **toks, int len, int *tok_lens);
-static double calc_letterscore(unsigned char *bytes, int len);
+static double calc_wordsscore(struct bytes **toks, int len);
+static double calc_letterscore(struct bytes *bytes);
 static double calc_letterfreqscore(unsigned char byte);
-static double calc_startwordscore(unsigned char *bytes);
-static double calc_endwordscore(unsigned char *bytes, int len);
+static double calc_startwordscore(struct bytes *bytes);
+static double calc_endwordscore(struct bytes *bytes);
 
-void score_bytes(double *scores, unsigned char *bytes, int len)
+void score_bytes(double *scores, struct bytes *bytes)
 {
 	int i = 0;
 	unsigned char c = 0;
-	unsigned char *xored = NULL;
-	xored = malloc(len * sizeof(xored[0]));
+	struct bytes *xored = NULL;
+	xored = bytes_create(bytes->len);
 	assert(xored != NULL);
 
 	for (i = 0, c = START_CIPHER; i < CIPHERS; i++, c++) {
-		xorbytes(xored, bytes, len, c);
-		scores[i] = calc_bytescore(xored, len);
+		xorbytes(xored, bytes, c);
+		scores[i] = calc_bytescore(xored);
 	}
 
-	free(xored);
+	bytes_put(xored);
 }
 
-double calc_bytescore(unsigned char *bytes, int len)
+double calc_bytescore(struct bytes *bytes)
 {
-	int i, tok_len, *tok_lens = NULL;
+	int i, tok_len, offset;
 	double score = 0.0;
 	unsigned char *pby = NULL;
-	unsigned char **toks = NULL;
-	i = tok_len = 0;
+	struct bytes **tokens = NULL;
+	i = tok_len = offset = 0;
 
-	toks = malloc(len * sizeof(toks[0]));
-	tok_lens = malloc(len * sizeof(tok_lens[0]));
-	assert(toks != NULL);
-	assert(tok_lens != NULL);
+	tokens = malloc(bytes->len * sizeof(*tokens));
+	assert(tokens != NULL);
 
-	for (i = 0; i < len; i++) {
-		toks[i] = NULL;
-		toks[i] = malloc(len * sizeof(toks[i][0]));
-		assert(toks[i] != NULL);
-	}
-
-	pby = bytetok(bytes, SEPARATORS, len, &tok_len);
+	pby = bytetok(bytes->data, bytes->len, SEPARATORS, &tok_len);
 	for (i = 0; pby != NULL; i++) {
-		if (i >= len)
+		if (i >= bytes->len)
 			break;
-		tok_lens[i] = tok_len;
-		memcpy(toks[i], pby, tok_len * sizeof(toks[i][0]));
-		pby = bytetok(bytes, SEPARATORS, len, &tok_len);
+		tokens[i] = bytes_create(tok_len);
+		memcpy(tokens[i], pby, tok_len * sizeof(*tokens[i]));
+		offset += tokens[i]->len;
+		pby = bytetok(pby + tok_len, bytes->len - offset, SEPARATORS,
+			      &tok_len);
 	}
 
-	score += calc_letterscore(bytes, len);
-	score += calc_wordsscore(toks, i - 1, tok_lens);
+	score += calc_letterscore(bytes);
+	score += calc_wordsscore(tokens, i - 1);
 
-	for (i = 0; i < len; i++) {
-		free(toks[i]);
+	for (i = 0; i < i; i++) {
+		bytes_put(tokens[i]);
 	}
-	free(toks);
-	free(tok_lens);
+	free(tokens);
 
 	return score;
 }
 
-static double calc_wordsscore(unsigned char **toks, int len, int *tok_lens)
+static double calc_wordsscore(struct bytes **toks, int len)
 {
 	int i = 0;
 	double score = 0.0;
 
 	for (i = 0; i < len; i++) {
 		score += calc_startwordscore(toks[i]);
-		score += calc_endwordscore(toks[i], tok_lens[i]);
+		score += calc_endwordscore(toks[i]);
 	}
 
 	return score;
 }
 
-static double calc_letterscore(unsigned char *bytes, int len)
+static double calc_letterscore(struct bytes *bytes)
 {
 	int i = 0;
 	double score = 0.0;
 
-	for (i = 0; i < len; i++) {
-		score += calc_letterfreqscore(bytes[i]);
+	for (i = 0; i < bytes->len; i++) {
+		score += calc_letterfreqscore(bytes->data[i]);
 	}
 
 	return score;
@@ -155,9 +148,9 @@ static double calc_letterfreqscore(unsigned char byte)
 	}
 }
 
-static double calc_startwordscore(unsigned char *bytes)
+static double calc_startwordscore(struct bytes *bytes)
 {
-	switch(toupper(bytetoascii(bytes[0]))) {
+	switch(toupper(bytetoascii(bytes->data[0]))) {
 		case 'T':
 			return 16.708;
 		case 'A':
@@ -215,9 +208,9 @@ static double calc_startwordscore(unsigned char *bytes)
 	}
 }
 
-static double calc_endwordscore(unsigned char *bytes, int len)
+static double calc_endwordscore(struct bytes *bytes)
 {
-	switch(toupper(bytetoascii(bytes[len - 1]))) {
+	switch(toupper(bytetoascii(bytes->data[bytes->len - 1]))) {
 		case 'E':
 			return 20.660;
 		case 'S':
