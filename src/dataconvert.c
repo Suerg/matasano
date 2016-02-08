@@ -44,51 +44,29 @@ unsigned char hexdigittobyte(char hexdigit)
 	}
 }
 
-/*
- *void xortwo(unsigned char *xored, unsigned char *b1,
- *                unsigned char *b2, int len)
- *{
- *        int i;
- *        for (i = 0; i < num; i++)
- *                xored[i] = buf1[i] ^ buf2[i];
- *}
- */
-
 struct bytes *hextobase64(struct bytes *hex)
 {
 	int i, j, base64len;
 	struct bytes *base64 = NULL;
 	i = j = 0;
 
-	base64len = (int)(hex->len / 1.5);
+	base64len = (int)((hex->len * 2) / 1.5);
 
-	if (hex->len % 2 != 0)
+	if ((hex->len * 2) % 2 != 0)
 		base64len++;
 	base64 = bytes_create(base64len);
 
 	for (j = i = 0; i < hex->len - 2; i += 3) {
 		base64->data[j++] = (hex->data[i] & 0xFC) >> 2;
 		base64->data[j++] = ((hex->data[i] & 0x03) << 4)
-				| ((hex->data[i + 1] & 0xF0) >> 4);
+					| ((hex->data[i + 1] & 0xF0) >> 4);
 		base64->data[j++] = ((hex->data[i + 1] & 0x0F) << 2)
-				| ((hex->data[i + 2] & 0xC0) >> 6);
+					| ((hex->data[i + 2] & 0xC0) >> 6);
 		base64->data[j++] = hex->data[i + 2] & 0x3F;
 	}
 
 	return base64;
 }
-
-/*
- *void base64tostr(char *str, struct bytes *base64)
- *{
- *        int i;
- *
- *        for (i = 0; i < base64->len; i++) {
- *                str[i] = base64todigit(asciitobyte(base64[i]));
- *        }
- *        str[i] = '\0';
- *}
- */
 
 char base64todigit(unsigned char value)
 {
@@ -106,49 +84,60 @@ char base64todigit(unsigned char value)
 		return '=';
 }
 
-/*
- *unsigned char xorbyte(unsigned char byte, unsigned char xorwith)
- *{
- *        return byte ^ xorwith;
- *}
- *
- *void xorbytes(unsigned char *xored, unsigned char *bytes,
- *                int num, unsigned char xorwith)
- *{
- *        int i;
- *
- *        for (i = 0; i < num; i++)
- *                xored[i] = xorbyte(bytes[i], xorwith);
- *}
- */
-
 unsigned char *bytetok(unsigned char *bytes, int len, char *delimiters,
-		       int *tok_len)
+		int offset,
+		int *tok_len, int *delim_len)
 {
-	int i, j, contains;
+	int end_i, i, j, contains, remaining_len;
+	unsigned char *bytes_start_from = NULL;
 	unsigned char *start = NULL;
-	i = j = contains = 0;
+	end_i = i = j = remaining_len = contains = 0;
 
-	for (i = 0; i < len; i++) {
+	if (offset < 0 || len <= 0 || offset >= len)
+		return start;
+
+	bytes_start_from = bytes + offset;
+	remaining_len = len - offset;
+
+	for (i = 0; i < remaining_len; i++) {
 		contains = 0;
 		for (j = 0; j < (int)strlen(delimiters); j++)
-			if ((int)bytes[i] == (int)delimiters[j])
+			if ((int)bytes_start_from[i] == (int)delimiters[j])
 				contains = 1;
 		if (!contains) {
-			start = &bytes[i];
+			start = &bytes_start_from[i];
 			break;
 		}
 	}
 
-	contains = 0;
-	for (i = start - bytes; i < len; i++) {
+	if (!start)
+		return start;
+
+	for (i = start - bytes_start_from; i < remaining_len; i++) {
+		contains = 0;
 		for (j = 0; j < (int)strlen(delimiters); j++)
-			if ((int)bytes[i] == (int)delimiters[j])
+			if ((int)bytes_start_from[i] == (int)delimiters[j])
 				contains = 1;
-		if (contains)
+		if (contains) {
+			end_i = i - 1;
 			break;
+		} else if (i == remaining_len - 1) {
+			end_i = i;
+		}
 	}
-	*tok_len = (&bytes[i - 1] - start) + 1;
+
+	for (i = end_i + 1; i < remaining_len; i++) {
+		contains = 0;
+		for (j = 0; j < (int)strlen(delimiters); j++)
+			if ((int)bytes_start_from[i] == (int)delimiters[j])
+				contains = 1;
+		if (!contains) {
+			*delim_len = (i - end_i) - 1;
+			break;
+		}
+	}
+
+	*tok_len = (&bytes_start_from[end_i] - start) + 1;
 
 	return start;
 }

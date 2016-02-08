@@ -1,3 +1,4 @@
+#include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
 #include <assert.h>
@@ -9,12 +10,15 @@
 #include "score.h"
 #include "dataconvert.h"
 #include "datamanip.h"
+#include "bytes-node.h"
 
-static double calc_wordsscore(struct bytes **toks, int len);
+static double calc_wordsscore(struct bytes_node *tokens);
 static double calc_letterscore(struct bytes *bytes);
 static double calc_letterfreqscore(unsigned char byte);
 static double calc_startwordscore(struct bytes *bytes);
 static double calc_endwordscore(struct bytes *bytes);
+static void score_bytes(double *scores, struct bytes *bytes);
+static double calc_bytescore(struct bytes *bytes);
 
 void score_bytes(double *scores, struct bytes *bytes)
 {
@@ -34,45 +38,28 @@ void score_bytes(double *scores, struct bytes *bytes)
 
 double calc_bytescore(struct bytes *bytes)
 {
-	int i, tok_len, offset;
 	double score = 0.0;
-	unsigned char *pby = NULL;
-	struct bytes **tokens = NULL;
-	i = tok_len = offset = 0;
+	struct bytes_node *tokens = NULL;
 
-	tokens = malloc(bytes->len * sizeof(*tokens));
-	assert(tokens != NULL);
-
-	pby = bytetok(bytes->data, bytes->len, SEPARATORS, &tok_len);
-	for (i = 0; pby != NULL; i++) {
-		if (i >= bytes->len)
-			break;
-		tokens[i] = bytes_create(tok_len);
-		memcpy(tokens[i], pby, tok_len * sizeof(*tokens[i]));
-		offset += tokens[i]->len;
-		pby = bytetok(pby + tok_len, bytes->len - offset, SEPARATORS,
-			      &tok_len);
-	}
-
+	tokens = bytes_node_init_as_tokens(bytes, SEPARATORS);
 	score += calc_letterscore(bytes);
-	score += calc_wordsscore(tokens, i - 1);
+	score += calc_wordsscore(tokens);
 
-	for (i = 0; i < i; i++) {
-		bytes_put(tokens[i]);
-	}
-	free(tokens);
+	bytes_node_put(tokens);
 
 	return score;
 }
 
-static double calc_wordsscore(struct bytes **toks, int len)
+static double calc_wordsscore(struct bytes_node *tokens)
 {
 	int i = 0;
 	double score = 0.0;
 
-	for (i = 0; i < len; i++) {
-		score += calc_startwordscore(toks[i]);
-		score += calc_endwordscore(toks[i]);
+	for (i = 0; i < bytes_node_len(tokens); i++) {
+		score += calc_startwordscore(
+				bytes_node_element_at(tokens, i)->bytes);
+		score += calc_endwordscore(
+				bytes_node_element_at(tokens, i)->bytes);
 	}
 
 	return score;
@@ -264,4 +251,28 @@ static double calc_endwordscore(struct bytes *bytes)
 		default:
 			return 0.000;
 	}
+}
+
+struct bytes *highest_scoring_xor(struct bytes *bytes)
+{
+	int i = 0;
+	unsigned char cipher = 0;
+	struct bytes *xored = bytes_create(bytes->len);
+	double highscore = 0.0;
+	double *scores = malloc(CIPHERS * sizeof(*scores));
+	score_bytes(scores, bytes);
+
+	for (i = 0; i < CIPHERS; i++) {
+		if (scores[i] > highscore) {
+			highscore = scores[i];
+			assert(i >= 0x00 && i <= 0xFF);
+			cipher = START_CIPHER + (unsigned char)i;
+               }
+	}
+      	i = cipher;
+      	xorbytes(xored, bytes, cipher);
+
+	free(scores);
+
+	return xored;
 }
