@@ -14,5 +14,6 @@ void base64tostr(char *str, struct bytes *base64);
 char base64todigit(unsigned char value);
 char bytetoascii(unsigned char byte);
 unsigned char asciitobyte(char ascii);
+void bytestostr(char *str, struct bytes *bytes);
 
 #endif

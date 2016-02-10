@@ -153,3 +153,13 @@ unsigned char asciitobyte(char ascii)
 	assert(ascii >= 0);
 	return (unsigned char)ascii;
 }
+
+void bytestostr(char *str, struct bytes *bytes)
+{
+	int i = 0;
+
+	for (i = 0; i < bytes->len; i++)
+		str[i] = bytetoascii(bytes->data[i]);
+
+	str[bytes->len] = '\0';
+}

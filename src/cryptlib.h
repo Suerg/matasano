@@ -6,7 +6,7 @@
 /*
  * Library functions
  */
-double decipherxor(char *deciphered, char *hexstr);
+void decipherxor(char *deciphered, char *hexstr);
 void encipher_repeatingxor(char *enciphered,
 		char *str, char *key);
 void decipher_repeatingxor(char *deciphered,

@@ -345,6 +345,36 @@ static void test_asciitobyte_assert_failure(void **state)
 	assert_true(save == 0);
 }
 
+static void test_bytestostr(void **state)
+{
+	char *ans_1 = "this is how the world ends...";
+	char *ans_2 = "the quick brown fox jumps over the lazy dog";
+	char *ans_3 = "that's all folks";
+
+	struct bytes *b_1 = bytes_init_from_str(ans_1);
+	struct bytes *b_2 = bytes_init_from_str(ans_2);
+	struct bytes *b_3 = bytes_init_from_str(ans_3);
+
+	char *res_1 = malloc(b_1->len * sizeof(*res_1) + 1);
+	char *res_2 = malloc(b_2->len * sizeof(*res_2) + 1);
+	char *res_3 = malloc(b_3->len * sizeof(*res_3) + 1);
+
+	bytestostr(res_1, b_1);
+	bytestostr(res_2, b_2);
+	bytestostr(res_3, b_3);
+
+	assert_memory_equal(res_1, ans_1, strlen(ans_1));
+	assert_memory_equal(res_2, ans_2, strlen(ans_2));
+	assert_memory_equal(res_3, ans_3, strlen(ans_3));
+
+	free(res_1);
+	free(res_2);
+	free(res_3);
+	bytes_put(b_1);
+	bytes_put(b_2);
+	bytes_put(b_3);
+}
+
 int main(void)
 {
 	const struct CMUnitTest tests[] = {
@@ -370,6 +400,7 @@ int main(void)
 		, cmocka_unit_test(test_bytetoascii_assert_failure)
 		, cmocka_unit_test(test_asciitobyte_success)
 		, cmocka_unit_test(test_asciitobyte_assert_failure)
+		, cmocka_unit_test(test_bytestostr)
 	};
 
 	return cmocka_run_group_tests(tests, NULL, NULL);
