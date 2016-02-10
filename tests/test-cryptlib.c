@@ -19,10 +19,20 @@ static void test_decipherxor(void **state)
 	free(deciphered);
 }
 
+static void test_decipherxor_file(void **state)
+{
+	char *ans = "Now that the party is jumping\n";
+	char res[600];
+	decipherxor_file(res, "../res/4.txt");
+
+	assert_memory_equal(res, ans, strlen(ans));
+}
+
 int main(void)
 {
 	const struct CMUnitTest tests[] = {
-		cmocka_unit_test(test_decipherxor)
+		cmocka_unit_test(test_decipherxor),
+		cmocka_unit_test(test_decipherxor_file)
 	};
 
 	return cmocka_run_group_tests(tests, NULL, NULL);

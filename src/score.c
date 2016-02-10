@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stddef.h>
 #include <string.h>
 #include <stdlib.h>
 #include <assert.h>
@@ -19,6 +20,8 @@ static double calc_startwordscore(struct bytes *bytes);
 static double calc_endwordscore(struct bytes *bytes);
 static void score_bytes(double *scores, struct bytes *bytes);
 static double calc_bytescore(struct bytes *bytes);
+static void remove_newline(char *line);
+static char *find_newline(char *line);
 
 void score_bytes(double *scores, struct bytes *bytes)
 {
@@ -28,7 +31,7 @@ void score_bytes(double *scores, struct bytes *bytes)
 	xored = bytes_create(bytes->len);
 	assert(xored != NULL);
 
-	for (i = 0, c = START_CIPHER; i < CIPHERS; i++, c++) {
+	for (i = 0, c = START_CIPHER; i < (int)CIPHERS; i++, c++) {
 		xorbytes(xored, bytes, c);
 		scores[i] = calc_bytescore(xored);
 	}
@@ -36,16 +39,18 @@ void score_bytes(double *scores, struct bytes *bytes)
 	bytes_put(xored);
 }
 
-double calc_bytescore(struct bytes *bytes)
+static double calc_bytescore(struct bytes *bytes)
 {
 	double score = 0.0;
 	struct bytes_node *tokens = NULL;
 
-	tokens = bytes_node_init_as_tokens(bytes, SEPARATORS);
-	score += calc_letterscore(bytes);
-	score += calc_wordsscore(tokens);
+	if (printable(bytes)) {
+		tokens = bytes_node_init_as_tokens(bytes, SEPARATORS);
+		score += calc_letterscore(bytes);
+		score += calc_wordsscore(tokens);
 
-	bytes_node_put(tokens);
+		bytes_node_put(tokens);
+	}
 
 	return score;
 }
@@ -70,9 +75,8 @@ static double calc_letterscore(struct bytes *bytes)
 	int i = 0;
 	double score = 0.0;
 
-	for (i = 0; i < bytes->len; i++) {
+	for (i = 0; i < bytes->len; i++)
 		score += calc_letterfreqscore(bytes->data[i]);
-	}
 
 	return score;
 }
@@ -262,7 +266,7 @@ struct bytes *highest_scoring_xor(struct bytes *bytes)
 	double *scores = malloc(CIPHERS * sizeof(*scores));
 	score_bytes(scores, bytes);
 
-	for (i = 0; i < CIPHERS; i++) {
+	for (i = 0; i < (int)CIPHERS; i++) {
 		if (scores[i] > highscore) {
 			highscore = scores[i];
 			assert(i >= 0x00 && i <= 0xFF);
@@ -275,4 +279,53 @@ struct bytes *highest_scoring_xor(struct bytes *bytes)
 	free(scores);
 
 	return xored;
+}
+
+static void remove_newline(char *line)
+{
+	char *newline = find_newline(line);
+	if (newline != NULL)
+		*newline = '\0';
+}
+
+static char *find_newline(char *line)
+{
+	return strchr(line, '\n');
+}
+
+struct bytes *highest_scoring_xor_in_file(FILE *fp)
+{
+	char *line;
+	struct bytes *highest = NULL;
+	double highscore = 0.0;
+	int line_len = 600;
+	assert(fp != NULL);
+
+	line = malloc(line_len * sizeof(*line) + 1);
+
+	while (fgets(line, line_len, fp) != NULL) {
+		struct bytes *line_bytes = NULL;
+		struct bytes *highest_in_line = NULL;
+		double line_score = 0.0;
+
+		remove_newline(line);
+		line_bytes = bytes_init_from_hexstr(line);
+		highest_in_line = highest_scoring_xor(line_bytes);
+		line_score = calc_bytescore(highest_in_line);
+
+		if (line_score > highscore) {
+			highscore = line_score;
+			highest_in_line = bytes_get(highest_in_line);
+			if (highest != NULL)
+				bytes_put(highest);
+			highest = highest_in_line;
+		}
+
+		bytes_put(highest_in_line);
+		bytes_put(line_bytes);
+	}
+
+	free(line);
+
+	return highest;
 }

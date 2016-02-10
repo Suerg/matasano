@@ -2,7 +2,6 @@
  * Author: David Piper
  * cryptlib for matasano cryptopals.com challenges
  */
-#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <assert.h>
@@ -153,6 +152,18 @@ unsigned char asciitobyte(char ascii)
 	assert(ascii >= 0);
 	return (unsigned char)ascii;
 }
+
+int printable(struct bytes *bytes)
+{
+	int res = 1, i = 0;
+
+	for (i = 0; i < bytes->len; i++)
+		if (bytes->data[i] > 127)
+			res = 0;
+
+	return res;
+}
+
 
 void bytestostr(char *str, struct bytes *bytes)
 {

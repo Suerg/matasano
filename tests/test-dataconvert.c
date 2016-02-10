@@ -1,4 +1,4 @@
-#include <stdio.h>
+#include <stdarg.h>
 #include <setjmp.h>
 #include <assert.h>
 #include <stdlib.h>
@@ -118,9 +118,6 @@ static void test_bytetok_1(void **state)
 	pby = bytetok(bytes->data, bytes->len, delims,
 			offset, &tok_len, &delim_len);
 	assert_true(*pby == 'h');
-	fprintf(stderr,
-		"got tok len: %d, delim_len: %d\n",
-		tok_len, delim_len);
 	assert_true(tok_len == 5);
 	assert_true(delim_len == 1);
 
@@ -252,7 +249,6 @@ static void test_hextobase64_2(void **state)
 		33, 50, 27, 54, 61, 45
 	};
 
-	printf("55: %d", base64->data[55]);
 	assert_memory_equal(answer, base64->data, base64->len *
 				    sizeof(base64->data[0]));
 	bytes_put(bytes);

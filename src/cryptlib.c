@@ -36,6 +36,21 @@ void decipherxor(char *deciphered, char *hexstr)
 	bytes_put(input);
 }
 
+void decipherxor_file(char *deciphered, char *fname)
+{
+	FILE *fp = NULL;
+	struct bytes *deciphered_bytes = NULL;
+	assert(fname != NULL);
+	fp = fopen(fname, "r");
+	assert(fp != NULL);
+
+	deciphered_bytes = highest_scoring_xor_in_file(fp);
+	bytestostr(deciphered, deciphered_bytes);
+
+	fclose(fp);
+	bytes_put(deciphered_bytes);
+}
+
 /*
  *void encipher_repeatingxor(char *enciphered, char *str, char *key)
  *{

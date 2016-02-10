@@ -21,5 +21,6 @@
 #include "bytes.h"
 
 struct bytes *highest_scoring_xor(struct bytes *bytes);
+struct bytes *highest_scoring_xor_in_file(FILE *fp);
 
 #endif

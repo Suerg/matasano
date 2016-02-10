@@ -7,6 +7,8 @@
  * Library functions
  */
 void decipherxor(char *deciphered, char *hexstr);
+void decipherxor_file(char *deciphered, char *fname);
+
 void encipher_repeatingxor(char *enciphered,
 		char *str, char *key);
 void decipher_repeatingxor(char *deciphered,
