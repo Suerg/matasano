@@ -28,11 +28,26 @@ static void test_decipherxor_file(void **state)
 	assert_memory_equal(res, ans, strlen(ans));
 }
 
+static void test_encipher_repeating_key_xor(void **state)
+{
+	char *str = "Burning 'em, if you ain't quick and nimble\n"
+		    "I go crazy when I hear a cymbal";
+	char *ans = "0b3637272a2b2e63622c2e69692a23693a2a3c6324202d623d63343c2"
+		"a26226324272765272a282b2f20430a652e2c652a3124333a653e2b202763"
+		"0c692b20283165286326302e27282f";
+	char res[600];
+	char *key = "ICE";
+	encipher_repeating_key_xor(res, str, key);
+
+	assert_memory_equal(res, ans, strlen(ans));
+}
+
 int main(void)
 {
 	const struct CMUnitTest tests[] = {
 		cmocka_unit_test(test_decipherxor),
-		cmocka_unit_test(test_decipherxor_file)
+		cmocka_unit_test(test_decipherxor_file),
+		cmocka_unit_test(test_encipher_repeating_key_xor)
 	};
 
 	return cmocka_run_group_tests(tests, NULL, NULL);

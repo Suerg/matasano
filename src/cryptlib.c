@@ -105,3 +105,16 @@ void decipherxor_file(char *deciphered, char *fname)
  *        }
  *}
  */
+
+void encipher_repeating_key_xor(char *enciphered, char *str, char *key)
+{
+	struct bytes *bytes = bytes_init_from_str(str);
+	struct bytes *key_bytes = bytes_init_from_str(key);
+	struct bytes *enciphered_bytes = xor_repeating_key(bytes, key_bytes);
+
+	bytestohexstr(enciphered, enciphered_bytes, 0);
+
+	bytes_put(bytes);
+	bytes_put(key_bytes);
+	bytes_put(enciphered_bytes);
+}

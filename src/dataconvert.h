@@ -15,6 +15,9 @@ char base64todigit(unsigned char value);
 char bytetoascii(unsigned char byte);
 unsigned char asciitobyte(char ascii);
 void bytestostr(char *str, struct bytes *bytes);
+void bytestohexstr(char *hexstr, struct bytes *bytes, int uppercase);
 int printable(struct bytes *bytes);
+void bytetohexs(char *d1, char *d2, unsigned char byte, int uppercase);
+char nibbletohexdigit(char nibble, int uppercase);
 
 #endif

@@ -8,5 +8,6 @@ void xortwo(struct bytes *xored, struct bytes *b1,
 		struct bytes *b2);
 unsigned char xorbyte(unsigned char byte, unsigned char xorwith);
 void xorbytes(struct bytes *xored, struct bytes *bytes, unsigned char xorwith);
+struct bytes *xor_repeating_key(struct bytes *bytes, struct bytes *key);
 
 #endif

@@ -174,3 +174,66 @@ void bytestostr(char *str, struct bytes *bytes)
 
 	str[bytes->len] = '\0';
 }
+
+void bytestohexstr(char *hexstr, struct bytes *bytes, int uppercase)
+{
+	int i, j;
+	char d1, d2;
+	d1 = d2 = 0;
+	i = j = 0;
+
+	for (i = 0; i < bytes->len; i++) {
+		bytetohexs(&d1, &d2, bytes->data[i], uppercase);
+		hexstr[j++] = d1;
+		hexstr[j++] = d2;
+	}
+}
+
+void bytetohexs(char *d1, char *d2, unsigned char byte, int uppercase)
+{
+	char n1 = (char)(byte >> 4) & 0xF;
+	char n2 = (char)(byte & 0xF);
+
+	*d1 = nibbletohexdigit(n1, uppercase);
+	*d2 = nibbletohexdigit(n2, uppercase);
+}
+
+char nibbletohexdigit(char nibble, int uppercase)
+{
+	if (nibble >= 0 && nibble <= 9)
+		return '0' + nibble;
+	switch(nibble) {
+	case 10:
+		if (uppercase)
+			return 'A';
+		else
+			return 'a';
+	case 11:
+		if (uppercase)
+			return 'B';
+		else
+			return 'b';
+	case 12:
+		if (uppercase)
+			return 'C';
+		else
+			return 'c';
+	case 13:
+		if (uppercase)
+			return 'D';
+		else
+			return 'd';
+	case 14:
+		if (uppercase)
+			return 'E';
+		else
+			return 'e';
+	case 15:
+		if (uppercase)
+			return 'F';
+		else
+			return 'f';
+	default:
+		return 0;
+	}
+}

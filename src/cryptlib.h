@@ -9,8 +9,7 @@
 void decipherxor(char *deciphered, char *hexstr);
 void decipherxor_file(char *deciphered, char *fname);
 
-void encipher_repeatingxor(char *enciphered,
-		char *str, char *key);
+void encipher_repeating_key_xor(char *enciphered, char *str, char *key);
 void decipher_repeatingxor(char *deciphered,
 		char *enciphered, char *key);
 

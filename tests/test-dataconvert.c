@@ -371,6 +371,64 @@ static void test_bytestostr(void **state)
 	bytes_put(b_3);
 }
 
+static void test_bytestohexstr(void **state)
+{
+	char ans[] = "0b3637272a2b2e63622c2e69692a23693a2a3c6324202d623d63343"
+		"c2a26226324272765272a282b2f20430a652e2c652a3124333a653"
+		"e2b2027630c692b20283165286326302e27282f";
+	char hexstr[600];
+	struct bytes *bytes = bytes_init_from_hexstr(ans);
+
+	bytestohexstr(hexstr, bytes, 0);
+
+	assert_memory_equal(hexstr, ans, strlen(ans));
+
+	bytes_put(bytes);
+}
+
+static void test_bytetohexs(void **state)
+{
+	char a1_1 = '0';
+	char a2_1 = 'b';
+	char a1_2 = '3';
+	char a2_2 = '6';
+	unsigned char b1 = 0x0b;
+	unsigned char b2 = 0x36;
+	char res1_1 = 0;
+	char res2_1 = 0;
+	char res1_2 = 0;
+	char res2_2 = 0;
+
+	bytetohexs(&res1_1, &res2_1, b1, 0);
+	bytetohexs(&res1_2, &res2_2, b2, 0);
+
+	assert_true(a1_1 == res1_1 && a2_1 == res2_1);
+	assert_true(a1_2 == res1_2 && a2_2 == res2_2);
+
+}
+
+static void test_nibbletohexdigit(void **state)
+{
+	char ans1 = 'F';
+	char n1 = 0xf;
+	char ans2 = 'D';
+	char n2 = 0xd;
+	char ans3 = '4';
+	char n3 = 0x4;
+
+	char res1;
+	char res2;
+	char res3;
+
+	res1 = nibbletohexdigit(n1, 1);
+	res2 = nibbletohexdigit(n2, 1);
+	res3 = nibbletohexdigit(n3, 1);
+
+	assert_true(res1 == ans1);
+	assert_true(res2 == ans2);
+	assert_true(res3 == ans3);
+}
+
 int main(void)
 {
 	const struct CMUnitTest tests[] = {
@@ -396,7 +454,10 @@ int main(void)
 		, cmocka_unit_test(test_bytetoascii_assert_failure)
 		, cmocka_unit_test(test_asciitobyte_success)
 		, cmocka_unit_test(test_asciitobyte_assert_failure)
-		, cmocka_unit_test(test_bytestostr)
+		, cmocka_unit_test(test_bytestostr),
+		cmocka_unit_test(test_bytestohexstr),
+		cmocka_unit_test(test_bytetohexs),
+		cmocka_unit_test(test_nibbletohexdigit)
 	};
 
 	return cmocka_run_group_tests(tests, NULL, NULL);

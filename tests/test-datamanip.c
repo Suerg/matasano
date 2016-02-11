@@ -62,12 +62,36 @@ static void test_xorbytes(void **state)
 	bytes_put(xored);
 }
 
+static void test_xor_repeating_key(void **state)
+{
+	struct bytes *bytes = bytes_init_from_str(
+			"Burning 'em, if you ain't quick and nimble\n"
+			"I go crazy when I hear a cymbal"
+			);
+	struct bytes *ans = bytes_init_from_hexstr(
+			"0b3637272a2b2e63622c2e69692a23693a2a3c6324202d623d633"
+			"43c2a26226324272765272a282b2f20430a652e2c652a3124333a"
+			"653e2b2027630c692b20283165286326302e27282f"
+			);
+	struct bytes *key = bytes_init_from_str("ICE");
+	struct bytes *enciphered = xor_repeating_key(bytes, key);
+
+	assert_memory_equal(enciphered->data, ans->data, ans->len *
+			sizeof(ans->data[0]));
+
+	bytes_put(bytes);
+	bytes_put(ans);
+	bytes_put(key);
+	bytes_put(enciphered);
+}
+
 int main(void)
 {
 	const struct CMUnitTest tests[] = {
-		cmocka_unit_test(test_xorbyte)
-		, cmocka_unit_test(test_xortwo)
-		, cmocka_unit_test(test_xorbytes)
+		cmocka_unit_test(test_xorbyte),
+		cmocka_unit_test(test_xortwo),
+		cmocka_unit_test(test_xorbytes),
+		cmocka_unit_test(test_xor_repeating_key)
 	};
 
 	return cmocka_run_group_tests(tests, NULL, NULL);

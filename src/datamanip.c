@@ -20,3 +20,16 @@ void xorbytes(struct bytes *xored, struct bytes *bytes, unsigned char xorwith)
 	for (i = 0; i < bytes->len; i++)
 		xored->data[i] = xorbyte(bytes->data[i], xorwith);
 }
+
+struct bytes *xor_repeating_key(struct bytes *bytes, struct bytes *key)
+{
+	int i = 0;
+	struct bytes *enciphered = bytes_create(bytes->len);
+
+	for (i = 0; i < bytes->len; i++)
+		enciphered->data[i] = xorbyte(bytes->data[i],
+				key->data[i % key->len]);
+
+	return enciphered;
+
+}
