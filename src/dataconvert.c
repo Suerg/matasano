@@ -237,3 +237,42 @@ char nibbletohexdigit(char nibble, int uppercase)
 		return 0;
 	}
 }
+
+void base64quadtobytetri(char d1, char d2, char d3, char d4,
+		unsigned char *b1, unsigned char *b2, unsigned char *b3)
+{
+	unsigned char val1 = base64digittoval(d1);
+	unsigned char val2 = base64digittoval(d2);
+	unsigned char val3 = base64digittoval(d3);
+	unsigned char val4 = base64digittoval(d4);
+
+	assert(val1 != 64);
+	assert(val2 != 64);
+	*b1 = (val1 << 2) | ((val2 >> 4) & 0x3);
+
+	if (val3 != 64)
+		*b2 = ((val2 & 0xF) << 4) | ((val3 >> 2) & 0xF);
+
+	if (val3 != 64 && val4 != 64) {
+	/* no padding */
+		*b3 = ((val3 & 0x3) << 6) | val4;
+	}
+}
+
+unsigned char base64digittoval(char digit)
+{
+	if (digit >= 'A' && digit <= 'Z')
+		return (unsigned char)digit - 'A';
+	else if (digit >= 'a' && digit <= 'z')
+		return (unsigned char)digit - 'a' + 26;
+	else if (digit >= '0' && digit <= '9')
+		return (unsigned char)digit - '0' + 52;
+	else if (digit == '+')
+		return 62;
+	else if (digit == '/')
+		return 63;
+	else if (digit == '=')
+		return 64;
+	else  /* error! */
+		return 128;
+}

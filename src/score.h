@@ -20,6 +20,7 @@
 #include "../tests/unit-test.h"
 #include "bytes.h"
 
+unsigned char find_singlebyte_cipher(struct bytes *bytes);
 struct bytes *highest_scoring_xor(struct bytes *bytes);
 struct bytes *highest_scoring_xor_in_file(FILE *fp);
 

@@ -51,61 +51,6 @@ void decipherxor_file(char *deciphered, char *fname)
 	bytes_put(deciphered_bytes);
 }
 
-/*
- *void encipher_repeatingxor(char *enciphered, char *str, char *key)
- *{
- *        int i, b, len, key_len;
- *        unsigned char *bytes, *key_bytes;
- *        key_len = len = b = i = 0;
- *        bytes = key_bytes = NULL;
- *
- *        bytes = malloc(strlen(str) * sizeof(bytes[0]));
- *        key_bytes = malloc(strlen(key) * sizeof(key_bytes[0]));
- *        assert(bytes != NULL);
- *        assert(key_bytes != NULL);
- *        len = strtobytes(bytes, str);
- *        key_len = strtobytes(key_bytes, key);
- *
- *        printf("Input: %s", str);
- *
- *        printf("XORd: ");
- *        for (b = i = 0; i < len; i++, b++) {
- *                unsigned char temp = 0;
- *                temp = xorbyte(bytes[i], key_bytes[i % key_len]);
- *                if (enciphered[b] == '\0') {
- *                        printf("found end");
- *                        break;
- *                }
- *                if (temp < 16) {
- *                        enciphered[b++] = 0;
- *                }
- *                enciphered[b] = bytetoascii(temp);
- *        }
- *
- *        printf("\n");
- *}
- *
- *void decipher_repeatingxor(char *deciphered, char *enciphered, char *key)
- *{
- *        int i, len, key_len;
- *        unsigned char *bytes, *key_bytes;
- *        len = key_len = i = 0;
- *        bytes = malloc(strlen(enciphered) * sizeof(bytes[0]));
- *        key_bytes = malloc(strlen(key) * sizeof(key_bytes[0]));
- *        assert(bytes != NULL);
- *        assert(key_bytes != NULL);
- *        len = hexstrtobytes(bytes, enciphered);
- *        key_len = strtobytes(key_bytes, key);
- *        assert(len > 0);
- *        assert(key_len > 0);
- *        for (i = 0; i < len; i++) {
- *                unsigned char xoredbyte = xorbyte(bytes[i],
- *                                key_bytes[i % key_len]);
- *                deciphered[i] = bytetoascii(xoredbyte);
- *        }
- *}
- */
-
 void encipher_repeating_key_xor(char *enciphered, char *str, char *key)
 {
 	struct bytes *bytes = bytes_init_from_str(str);
@@ -117,4 +62,84 @@ void encipher_repeating_key_xor(char *enciphered, char *str, char *key)
 	bytes_put(bytes);
 	bytes_put(key_bytes);
 	bytes_put(enciphered_bytes);
+}
+
+static int guess_keysize(struct bytes *enciphered)
+{
+	int min_dist = 100000;
+	int i = 0;
+	int keysize = 0;
+
+	for (i = KEYSIZE; i > 0; i--) {
+		int latest_dist = edit_distance_count(enciphered, i)/i;
+
+		if (latest_dist < min_dist)
+			min_dist = latest_dist;
+	}
+
+	return keysize;
+}
+
+static struct bytes **transpose_blocks(struct bytes **blocks, int keysize)
+{
+	int i, j;
+	struct bytes **trans_blocks = malloc(keysize * sizeof(*trans_blocks));
+	i = j = 0;
+
+	for (i = 0; i < keysize; i++)
+		trans_blocks[i] = bytes_create(keysize);
+
+	for (i = 0; i < keysize; i++)
+		for (j = 0; j < keysize; j++)
+			trans_blocks[i]->data[j] = blocks[j]->data[i];
+
+	return trans_blocks;
+}
+
+static struct bytes **make_keysize_blocks(struct bytes *enciphered,
+					  int keysize)
+{
+	int i, j, k;
+	struct bytes **blocks = malloc(keysize * sizeof(*blocks));
+	i = j = k = 0;
+
+	for (i = 0; i < keysize; i++)
+		blocks[i] = bytes_create(keysize);
+
+	for (i = 0; i < enciphered->len; i++)
+		for (j = 0; j < keysize; j++)
+			for (k = 0; k < keysize; k++)
+				blocks[j]->data[k] =
+					enciphered->data[i];
+	return blocks;
+}
+
+static struct bytes *guess_key(struct bytes *enciphered, int keysize)
+{
+	int i;
+	struct bytes *key = bytes_create(keysize);
+	struct bytes **blocks = NULL;
+	struct bytes **trans_blocks = NULL;
+	blocks = make_keysize_blocks(enciphered, keysize);
+	trans_blocks = transpose_blocks(blocks, keysize);
+
+	for (i = 0; i < keysize; i++) {
+		key->data[i] = find_singlebyte_cipher(trans_blocks[i]);
+	}
+
+	return key;
+}
+
+struct bytes *decipher_repeatingxor(struct bytes *enciphered)
+{
+	int keysize = 0;
+	struct bytes *key = NULL;
+	keysize = guess_keysize(enciphered);
+	key = guess_key(enciphered, keysize);
+
+	return xor_repeating_key(enciphered, key);
+}
+
+void decipher_repeatingxor_file(char *deciphered, char *fname)
+{
 }

@@ -85,13 +85,30 @@ static void test_xor_repeating_key(void **state)
 	bytes_put(enciphered);
 }
 
+static void test_edit_distance(void **state)
+{
+	struct bytes *b1 = bytes_init_from_str(
+			"this is a test\n");
+	struct bytes *b2 = bytes_init_from_str(
+			"wokka wokka!!!\n");
+	int dist = 0;
+
+	dist = edit_distance(b1, b2);
+
+	assert_true(dist == 37);
+
+	bytes_put(b1);
+	bytes_put(b2);
+}
+
 int main(void)
 {
 	const struct CMUnitTest tests[] = {
 		cmocka_unit_test(test_xorbyte),
 		cmocka_unit_test(test_xortwo),
 		cmocka_unit_test(test_xorbytes),
-		cmocka_unit_test(test_xor_repeating_key)
+		cmocka_unit_test(test_xor_repeating_key),
+		cmocka_unit_test(test_edit_distance)
 	};
 
 	return cmocka_run_group_tests(tests, NULL, NULL);

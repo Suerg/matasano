@@ -1,3 +1,4 @@
+#include <stdio.h>
 #include <stdarg.h>
 #include <setjmp.h>
 #include <assert.h>
@@ -429,35 +430,115 @@ static void test_nibbletohexdigit(void **state)
 	assert_true(res3 == ans3);
 }
 
+static void test_base64quadtobytetri(void **state)
+{
+	unsigned char b1, b2, b3;
+	b1 = b2 = b3 = 0;
+	base64quadtobytetri('T', 'W', 'F', 'u', &b1, &b2, &b3);
+
+	assert_true(b1 == 0x4d);
+	assert_true(b2 == 0x61);
+	assert_true(b3 == 0x6e);
+}
+
+static void test_base64quadtobytetri_pad1(void **state)
+{
+	unsigned char b1, b2, b3;
+	b1 = b2 = b3 = 0;
+	base64quadtobytetri('T', 'W', 'F', '=', &b1, &b2, &b3);
+
+	assert_true(b1 == 0x4d);
+	assert_true(b2 == 0x61);
+	assert_true(b3 == 0);
+}
+
+static void test_base64quadtobytetri_pad2(void **state)
+{
+	unsigned char b1, b2, b3;
+	b1 = b2 = b3 = 0;
+	base64quadtobytetri('T', 'W', '=', '=', &b1, &b3, &b3);
+
+	assert_true(b1 == 0x4d);
+	assert_true(b2 == 0);
+	assert_true(b3 == 0);
+}
+
+static void test_base64quadtobytetri_assert_failure(void **state)
+{
+	unsigned char b1, b2, b3;
+	b1 = b2 = b3 = 0;
+	expect_assert_failure(
+		base64quadtobytetri('T', '=', '=', '=', &b1, &b2, &b3));
+	expect_assert_failure(
+		base64quadtobytetri('=', '=', '=', '=', &b1, &b2, &b3));
+}
+
+static void test_base64digittoval(void **state)
+{
+	unsigned char a1 = 19;
+	unsigned char a2 = 22;
+	unsigned char a3 = 5;
+	unsigned char a4 = 46;
+	unsigned char a5 = 63;
+	unsigned char a6 = 57;
+	unsigned char a7 = 64;
+	unsigned char a8 = 128;
+
+	unsigned char res1 = base64digittoval('T');
+	unsigned char res2 = base64digittoval('W');
+	unsigned char res3 = base64digittoval('F');
+	unsigned char res4 = base64digittoval('u');
+	unsigned char res5 = base64digittoval('/');
+	unsigned char res6 = base64digittoval('5');
+	unsigned char res7 = base64digittoval('=');
+	unsigned char res8 = base64digittoval('#');
+	unsigned char res9 = base64digittoval('*');
+
+	assert_true(res1 == a1);
+	assert_true(res2 == a2);
+	assert_true(res3 == a3);
+	assert_true(res4 == a4);
+	assert_true(res5 == a5);
+	assert_true(res6 == a6);
+	assert_true(res7 == a7);
+	assert_true(res8 == a8);
+	assert_true(res9 == a8);
+}
+
 int main(void)
 {
 	const struct CMUnitTest tests[] = {
-		  cmocka_unit_test(test_hexdigittobyte_letters)
-		, cmocka_unit_test(test_hexdigittobyte_numbers)
-		, cmocka_unit_test(test_hexdigittobyte_assert_failure)
-		, cmocka_unit_test_setup_teardown(test_bytetok_1,
-				setup_bytetok_1, teardown_bytetok)
-		, cmocka_unit_test_setup_teardown(test_bytetok_1,
-				setup_bytetok_2, teardown_bytetok)
-		, cmocka_unit_test_setup_teardown(test_bytetok_2,
-				setup_bytetok_3, teardown_bytetok)
-		, cmocka_unit_test_setup_teardown(test_bytetok_3,
-				setup_bytetok_4, teardown_bytetok)
-		, cmocka_unit_test_setup_teardown(test_bytetok_4,
-				setup_bytetok_5, teardown_bytetok)
-		, cmocka_unit_test_setup_teardown(test_bytetok_5,
-				setup_bytetok_6, teardown_bytetok)
-		, cmocka_unit_test(test_hextobase64_1)
-		, cmocka_unit_test(test_hextobase64_2)
-		, cmocka_unit_test(test_base64todigit)
-		, cmocka_unit_test(test_bytetoascii_success)
-		, cmocka_unit_test(test_bytetoascii_assert_failure)
-		, cmocka_unit_test(test_asciitobyte_success)
-		, cmocka_unit_test(test_asciitobyte_assert_failure)
-		, cmocka_unit_test(test_bytestostr),
+		  cmocka_unit_test(test_hexdigittobyte_letters),
+		cmocka_unit_test(test_hexdigittobyte_numbers),
+		cmocka_unit_test(test_hexdigittobyte_assert_failure),
+		cmocka_unit_test_setup_teardown(test_bytetok_1,
+				setup_bytetok_1, teardown_bytetok),
+		cmocka_unit_test_setup_teardown(test_bytetok_1,
+				setup_bytetok_2, teardown_bytetok),
+		cmocka_unit_test_setup_teardown(test_bytetok_2,
+				setup_bytetok_3, teardown_bytetok),
+		cmocka_unit_test_setup_teardown(test_bytetok_3,
+				setup_bytetok_4, teardown_bytetok),
+		cmocka_unit_test_setup_teardown(test_bytetok_4,
+				setup_bytetok_5, teardown_bytetok),
+		cmocka_unit_test_setup_teardown(test_bytetok_5,
+				setup_bytetok_6, teardown_bytetok),
+		cmocka_unit_test(test_hextobase64_1),
+		cmocka_unit_test(test_hextobase64_2),
+		cmocka_unit_test(test_base64todigit),
+		cmocka_unit_test(test_bytetoascii_success),
+		cmocka_unit_test(test_bytetoascii_assert_failure),
+		cmocka_unit_test(test_asciitobyte_success),
+		cmocka_unit_test(test_asciitobyte_assert_failure),
+		cmocka_unit_test(test_bytestostr),
 		cmocka_unit_test(test_bytestohexstr),
 		cmocka_unit_test(test_bytetohexs),
-		cmocka_unit_test(test_nibbletohexdigit)
+		cmocka_unit_test(test_nibbletohexdigit),
+		cmocka_unit_test(test_base64quadtobytetri),
+		cmocka_unit_test(test_base64digittoval),
+		cmocka_unit_test(test_base64quadtobytetri_pad1),
+		cmocka_unit_test(test_base64quadtobytetri_pad2),
+		cmocka_unit_test(test_base64quadtobytetri_assert_failure)
 	};
 
 	return cmocka_run_group_tests(tests, NULL, NULL);

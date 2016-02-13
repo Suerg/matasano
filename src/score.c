@@ -257,11 +257,10 @@ static double calc_endwordscore(struct bytes *bytes)
 	}
 }
 
-struct bytes *highest_scoring_xor(struct bytes *bytes)
+unsigned char find_singlebyte_cipher(struct bytes *bytes)
 {
 	int i = 0;
 	unsigned char cipher = 0;
-	struct bytes *xored = bytes_create(bytes->len);
 	double highscore = 0.0;
 	double *scores = malloc(CIPHERS * sizeof(*scores));
 	score_bytes(scores, bytes);
@@ -273,10 +272,18 @@ struct bytes *highest_scoring_xor(struct bytes *bytes)
 			cipher = START_CIPHER + (unsigned char)i;
                }
 	}
-      	i = cipher;
-      	xorbytes(xored, bytes, cipher);
 
 	free(scores);
+
+	return cipher;
+}
+
+struct bytes *highest_scoring_xor(struct bytes *bytes)
+{
+	unsigned char cipher = 0;
+	struct bytes *xored = bytes_create(bytes->len);
+      	cipher = find_singlebyte_cipher(bytes);
+	xorbytes(xored, bytes, cipher);
 
 	return xored;
 }

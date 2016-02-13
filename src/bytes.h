@@ -15,5 +15,6 @@ struct bytes *bytes_get(struct bytes *bytes);
 struct bytes *bytes_create(int len);
 struct bytes *bytes_init_from_str(char *str);
 struct bytes *bytes_init_from_hexstr(char *hexstr);
+struct bytes *bytes_init_from_base64str(char *base64str);
 
 #endif

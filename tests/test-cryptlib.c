@@ -5,6 +5,8 @@
 #include <cmocka.h>
 
 #include "../src/cryptlib.h"
+#include "../src/bytes.h"
+#include "../src/datamanip.h"
 
 static void test_decipherxor(void **state)
 {
@@ -42,12 +44,37 @@ static void test_encipher_repeating_key_xor(void **state)
 	assert_memory_equal(res, ans, strlen(ans));
 }
 
+static void test_decipher_repeatingxor(void **state)
+{
+	char *str = "Burning 'em, if you ain't quick and nimble\n"
+		    "I go crazy when I hear a cymbal";
+	struct bytes *strbytes = bytes_init_from_str(str);
+	struct bytes *keybytes = bytes_init_from_str(
+			"ICE");
+	struct bytes *enciphered = xor_repeating_key(strbytes, keybytes);
+	struct bytes *res = decipher_repeatingxor(enciphered);
+
+	assert_memory_equal(res->data, strbytes->data,
+			strbytes->len * sizeof(strbytes->data[0]));
+}
+
+static void test_decipher_repeatingxor_file(void **state)
+{
+	/*char *ans = "...";*/
+	/*char *res = NULL;*/
+	/*decipher_repeatingxor_file(res, "../res/6.txt");*/
+
+	/*assert_memory_equal(res, ans, strlen(ans));*/
+}
+
 int main(void)
 {
 	const struct CMUnitTest tests[] = {
 		cmocka_unit_test(test_decipherxor),
 		cmocka_unit_test(test_decipherxor_file),
-		cmocka_unit_test(test_encipher_repeating_key_xor)
+		cmocka_unit_test(test_encipher_repeating_key_xor),
+		cmocka_unit_test(test_decipher_repeatingxor_file),
+		cmocka_unit_test(test_decipher_repeatingxor)
 	};
 
 	return cmocka_run_group_tests(tests, NULL, NULL);
