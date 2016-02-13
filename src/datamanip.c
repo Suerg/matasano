@@ -58,13 +58,58 @@ int edit_distance(struct bytes *b1, struct bytes *b2)
 
 int edit_distance_count(struct bytes *bytes, int num_bytes)
 {
-	int i, sum, j;
-	i = sum = j = 0;
-	assert(j <= bytes->len);
+	int i, sum, j, k;
+	struct bytes *block1;
+	struct bytes *block2;
+	i = sum = k = j = 0;
 
-	for (i = 0, j = num_bytes; i < num_bytes; i++, j++)
-		sum += byte_dist(bytes->data[i], bytes->data[j]);
+	if ((bytes->len / num_bytes) < 2)
+		return bytes->len * num_bytes;
+
+	block1 = bytes_create(num_bytes);
+	block2 = bytes_create(num_bytes);
+
+	for (k = 0, i = 0; i < num_bytes; i++, k++)
+		block1->data[k] = bytes->data[i];
+	for (k = 0, j = num_bytes; j < 2 * num_bytes; k++, j++)
+		block2->data[k] = bytes->data[j];
+
+	sum = edit_distance(block1, block2);
+
+	bytes_put(block1);
+	bytes_put(block2);
 
 	return sum;
+}
 
+double edit_distance_avg(struct bytes *bytes, int num_bytes)
+{
+	int i, sum, num, j, start, end;
+	struct bytes *block1;
+	struct bytes *block2;
+	i = sum = num = start = end = j = 0;
+
+	if ((bytes->len / num_bytes) < 2)
+		return (double)bytes->len * num_bytes;
+
+	block1 = bytes_create(num_bytes);
+	block2 = bytes_create(num_bytes);
+	end = (bytes->len/num_bytes) * num_bytes;
+
+	for (start = 0; start < (end - num_bytes);
+			start += num_bytes * 2, num++) {
+		int k = 0;
+		for (k = 0, i = start; i < (start + num_bytes); i++, k++)
+			block1->data[k] = bytes->data[i];
+		for (k = 0, j = num_bytes + start; j < (start + 2  *num_bytes);
+				k++, j++)
+			block2->data[k] = bytes->data[j];
+
+		sum += edit_distance(block1, block2);
+	}
+
+	bytes_put(block1);
+	bytes_put(block2);
+
+	return (double)sum / num;
 }

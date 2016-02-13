@@ -18,12 +18,16 @@ static double calc_letterscore(struct bytes *bytes);
 static double calc_letterfreqscore(unsigned char byte);
 static double calc_startwordscore(struct bytes *bytes);
 static double calc_endwordscore(struct bytes *bytes);
-static void score_bytes(double *scores, struct bytes *bytes);
-static double calc_bytescore(struct bytes *bytes);
+static void score_bytes(double *scores, struct bytes *bytes,
+		int include_words);
+static double calc_bytescore(struct bytes *bytes, int include_words);
+static double calc_digraphs(struct bytes *bytes);
+static double calc_digraphscore(unsigned char b1, unsigned char b2);
 static void remove_newline(char *line);
 static char *find_newline(char *line);
 
-void score_bytes(double *scores, struct bytes *bytes)
+
+void score_bytes(double *scores, struct bytes *bytes, int include_words)
 {
 	int i = 0;
 	unsigned char c = 0;
@@ -33,13 +37,86 @@ void score_bytes(double *scores, struct bytes *bytes)
 
 	for (i = 0, c = START_CIPHER; i < (int)CIPHERS; i++, c++) {
 		xorbytes(xored, bytes, c);
-		scores[i] = calc_bytescore(xored);
+		scores[i] = calc_bytescore(xored, include_words);
 	}
 
 	bytes_put(xored);
 }
 
-static double calc_bytescore(struct bytes *bytes)
+static double calc_digraphscore(unsigned char b1, unsigned char b2)
+{
+	char c1 = toupper(bytetoascii(b1));
+	char c2 = toupper(bytetoascii(b2));
+
+	if (c1 == 'T' && c2 == 'H')
+		return 4.21;
+	else if (c1 == 'H' && c2 == 'E')
+		return 3.80;
+	else if (c1 == 'I' && c2 == 'N')
+		return 2.42;
+	else if (c1 == 'A' && c2 == 'N')
+		return 2.19;
+	else if (c1 == 'E' && c2 == 'R')
+		return 2.11;
+	else if (c1 == 'R' && c2 == 'E')
+		return 1.88;
+	else if (c1 == 'N' && c2 == 'D')
+		return 1.63;
+	else if (c1 == 'O' && c2 == 'N')
+		return 1.52;
+	else if (c1 == 'E' && c2 == 'N')
+		return 1.39;
+	else if (c1 == 'A' && c2 == 'T')
+		return 1.39;
+	else if (c1 == 'E' && c2 == 'S')
+		return 1.30;
+	else if (c1 == 'E' && c2 == 'D')
+		return 1.25;
+	else if (c1 == 'O' && c2 == 'R')
+		return 1.21;
+	else if (c1 == 'O' && c2 == 'F')
+		return 1.20;
+	else if (c1 == 'A' && c2 == 'R')
+		return 1.16;
+	else if (c1 == 'I' && c2 == 'S')
+		return 1.16;
+	else if (c1 == 'I' && c2 == 'T')
+		return 1.14;
+	else if (c1 == 'O' && c2 == 'U')
+		return 1.13;
+	else if (c1 == 'T' && c2 == 'O')
+		return 1.13;
+	else if (c1 == 'H' && c2 == 'A')
+		return 1.10;
+	else if (c1 == 'N' && c2 == 'G')
+		return 1.09;
+	else if (c1 == 'S' && c2 == 'T')
+		return 1.08;
+	else if (c1 == 'T' && c2 == 'E')
+		return 1.07;
+	else if (c1 == 'A' && c2 == 'S')
+		return 1.00;
+	else if (c1 == 'H' && c2 == 'I')
+		return 0.99;
+	else if (c1 == 'S' && c2 == 'E')
+		return 0.94;
+	else
+		return 0.00;
+}
+
+static double calc_digraphs(struct bytes *bytes)
+{
+	int i = 0;
+	double score = 0.0;
+
+	for (i = 0; i < bytes->len - 1; i++) {
+		score += calc_digraphscore(bytes->data[i], bytes->data[i + 1]);
+	}
+
+	return score;
+}
+
+static double calc_bytescore(struct bytes *bytes, int include_words)
 {
 	double score = 0.0;
 	struct bytes_node *tokens = NULL;
@@ -47,8 +124,9 @@ static double calc_bytescore(struct bytes *bytes)
 	if (printable(bytes)) {
 		tokens = bytes_node_init_as_tokens(bytes, SEPARATORS);
 		score += calc_letterscore(bytes);
-		score += calc_wordsscore(tokens);
-
+		if (include_words)
+			score += calc_wordsscore(tokens);
+		score += calc_digraphs(bytes);
 		bytes_node_put(tokens);
 	}
 
@@ -84,6 +162,8 @@ static double calc_letterscore(struct bytes *bytes)
 static double calc_letterfreqscore(unsigned char byte)
 {
 	switch(toupper(bytetoascii(byte))) {
+	case ' ':
+		return 18.288;
 	case 'E':
 		return 12.702;
 	case 'T':
@@ -257,13 +337,13 @@ static double calc_endwordscore(struct bytes *bytes)
 	}
 }
 
-unsigned char find_singlebyte_cipher(struct bytes *bytes)
+unsigned char find_singlebyte_cipher(struct bytes *bytes, int include_words)
 {
 	int i = 0;
 	unsigned char cipher = 0;
 	double highscore = 0.0;
 	double *scores = malloc(CIPHERS * sizeof(*scores));
-	score_bytes(scores, bytes);
+	score_bytes(scores, bytes, include_words);
 
 	for (i = 0; i < (int)CIPHERS; i++) {
 		if (scores[i] > highscore) {
@@ -282,7 +362,7 @@ struct bytes *highest_scoring_xor(struct bytes *bytes)
 {
 	unsigned char cipher = 0;
 	struct bytes *xored = bytes_create(bytes->len);
-      	cipher = find_singlebyte_cipher(bytes);
+      	cipher = find_singlebyte_cipher(bytes, 1);
 	xorbytes(xored, bytes, cipher);
 
 	return xored;
@@ -318,7 +398,7 @@ struct bytes *highest_scoring_xor_in_file(FILE *fp)
 		remove_newline(line);
 		line_bytes = bytes_init_from_hexstr(line);
 		highest_in_line = highest_scoring_xor(line_bytes);
-		line_score = calc_bytescore(highest_in_line);
+		line_score = calc_bytescore(highest_in_line, 1);
 
 		if (line_score > highscore) {
 			highscore = line_score;
@@ -335,4 +415,13 @@ struct bytes *highest_scoring_xor_in_file(FILE *fp)
 	free(line);
 
 	return highest;
+}
+
+double score_repeatingxor(struct bytes *bytes, struct bytes *key)
+{
+	struct bytes *xored = xor_repeating_key(bytes, key);
+	double score = calc_bytescore(xored, 1);
+
+	bytes_put(xored);
+	return score;
 }

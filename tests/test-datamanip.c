@@ -101,6 +101,25 @@ static void test_edit_distance(void **state)
 	bytes_put(b2);
 }
 
+static void test_edit_distance_count(void **state)
+{
+	struct bytes *bytes = bytes_init_from_str(
+			"this is a test\nthis is a test\n");
+	struct bytes *b1 = bytes_init_from_str(
+			"this is a test\nwokka wokka!!!\n");
+	int dist, dist1;
+	dist = dist1 = 0;
+
+	dist = edit_distance_count(bytes, 15);
+	assert_true(dist == 0);
+
+	dist1 = edit_distance_count(b1, 15);
+	assert_true(dist1 == 37);
+
+	bytes_put(bytes);
+	bytes_put(b1);
+}
+
 int main(void)
 {
 	const struct CMUnitTest tests[] = {
@@ -108,7 +127,8 @@ int main(void)
 		cmocka_unit_test(test_xortwo),
 		cmocka_unit_test(test_xorbytes),
 		cmocka_unit_test(test_xor_repeating_key),
-		cmocka_unit_test(test_edit_distance)
+		cmocka_unit_test(test_edit_distance),
+		cmocka_unit_test(test_edit_distance_count)
 	};
 
 	return cmocka_run_group_tests(tests, NULL, NULL);

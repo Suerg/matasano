@@ -1,6 +1,7 @@
 #ifndef CRYPTLIB_H
 #define CRYPTLIB_H
 
+#define NUM_KEYSIZES 6
 #define KEYSIZE 40
 
 #include "../tests/unit-test.h"
