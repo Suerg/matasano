@@ -305,8 +305,44 @@ struct bytes *decipher_repeatingxor(struct bytes *enciphered)
 	return deciphered;
 }
 
-void decipher_repeatingxor_file(char *deciphered, char *fname)
+static void remove_whitespace(char *str)
 {
+	char *p;
+	char *q;
+	p = q = str;
+	while (*p != '\0') {
+		*q = *p++;
+		if (!isspace(*q))
+			q++;
+	}
+	*q = '\0';
+}
+
+static char * readstrfromfile(char *fname)
+{
+	FILE *fp = fopen(fname, "r");
+	char *str = NULL;
+	char buf[80];
+	int len = 80;
+	str = malloc((size_t)1);
+	str[0] = '\0';
+	while (fgets(buf, 80, fp) != NULL) {
+		len += 80;
+		str = realloc(str,
+				(size_t)len);
+		strcat(str, buf);
+		remove_whitespace(str);
+	}
+	return str;
+}
+
+void decipher_repeatingxor_file(char **deciphered, char *fname)
+{
+	char *base64 = readstrfromfile(fname);
+	struct bytes *bytes = bytes_init_from_base64str(base64);
+	struct bytes *deciph_bytes = decipher_repeatingxor(bytes);
+	*deciphered = malloc((size_t)deciph_bytes->len + 1);
+	bytestostr(*deciphered, deciph_bytes);
 }
 
 void free_cryptlib(void *item)
